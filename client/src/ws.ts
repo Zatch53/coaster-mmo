@@ -32,6 +32,9 @@ function handleMessage(msg: ServerMessage) {
     case "cursor":
       store.setCursor(msg.peerId, { x: msg.x, y: msg.y, name: msg.name, color: msg.color });
       break;
+    case "reset":
+      store.resetPieces();
+      break;
   }
 }
 

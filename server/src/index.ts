@@ -27,6 +27,11 @@ app.get("/api/stats", (_req, res) => {
   const pieceCount = (db.select().from(pieces).where(eq(pieces.parkId, PARK_ID)).all() as Piece[]).length;
   res.json({ pieceCount, peerCount: clients.size });
 });
+app.post("/api/reset", (_req, res) => {
+  db.delete(pieces).where(eq(pieces.parkId, PARK_ID)).run();
+  broadcast({ kind: "reset" });
+  res.json({ ok: true });
+});
 
 app.use(express.static(CLIENT_DIST));
 app.get(/^(?!\/api|\/ws|\/health).*/, (_req, res) => {

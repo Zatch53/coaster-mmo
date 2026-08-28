@@ -22,7 +22,8 @@ export type ServerMessage =
   | { kind: "piece_removed"; id: string }
   | { kind: "cursor"; peerId: string; x: number; y: number; name: string; color: string }
   | { kind: "peer_joined"; peer: PeerInfo }
-  | { kind: "peer_left"; peerId: string };
+  | { kind: "peer_left"; peerId: string }
+  | { kind: "reset" };
 
 export interface PeerInfo {
   id: string;

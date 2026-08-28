@@ -175,6 +175,23 @@ body,
   padding-top: 0.6rem;
 }
 
+.reset-btn {
+  width: 100%;
+  background: #2a1420;
+  border: 1px solid #5c2436;
+  color: #f2a3b5;
+  border-radius: 6px;
+  padding: 0.5rem 0.6rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.reset-btn-confirm {
+  background: #7a1f33;
+  border-color: #e63946;
+  color: #ffffff;
+}
+
 .help-page {
   max-width: 640px;
   margin: 2rem auto;

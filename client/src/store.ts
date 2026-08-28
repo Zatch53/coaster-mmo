@@ -36,6 +36,7 @@ interface ParkState {
   setInit: (pieces: Piece[], peers: PeerInfo[]) => void;
   addPiece: (p: Piece) => void;
   removePiece: (id: string) => void;
+  resetPieces: () => void;
   setPeer: (p: PeerInfo) => void;
   removePeer: (id: string) => void;
   setCursor: (peerId: string, c: RemoteCursor) => void;
@@ -64,6 +65,7 @@ export const useParkStore = create<ParkState>((set, get) => ({
       peers: new Map(peers.map((p) => [p.id, p])),
     }),
   addPiece: (p) => set((s) => ({ pieces: new Map(s.pieces).set(p.id, p) })),
+  resetPieces: () => set({ pieces: new Map() }),
   removePiece: (id) =>
     set((s) => {
       const next = new Map(s.pieces);
