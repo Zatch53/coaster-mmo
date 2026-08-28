@@ -3,23 +3,13 @@ import { Application, Container, Graphics, Text } from "pixi.js";
 import { useParkStore } from "./store";
 import { gridToScreen, screenToGrid, TILE_W, TILE_H } from "./iso";
 import { send } from "./ws";
+import { buildPieceArt, hexToInt } from "./pieceArt";
 import type { Piece } from "./types";
 
 const GRID_RADIUS = 24;
 const ZOOM_MIN = 0.4;
 const ZOOM_MAX = 2.5;
 const DRAG_THRESHOLD = 5;
-
-const PIECE_ICON: Record<string, string> = {
-  track_straight: "|",
-  track_curve: "↰",
-  track_up: "↗",
-  track_down: "↘",
-  station: "S",
-  ferris_wheel: "◎",
-  carousel: "◉",
-  drop_tower: "↑",
-};
 
 function drawTileDiamond(g: Graphics, cx: number, cy: number, fill: number, alpha = 1, stroke = 0x1d1d1d) {
   g.moveTo(cx, cy - TILE_H / 2)
@@ -85,25 +75,28 @@ export default function PixiCanvas() {
       }
       gridLayer.addChild(grid);
 
-      const ghost = new Graphics();
-      ghostLayer.addChild(ghost);
+      const ghostFootprint = new Graphics();
+      const ghostArt = new Container();
+      ghostLayer.addChild(ghostFootprint, ghostArt);
 
       function redrawGhost() {
-        ghost.clear();
+        ghostFootprint.clear();
+        ghostArt.removeChildren();
         const s = useParkStore.getState();
         const { sx, sy } = gridToScreen(hoverX, hoverY, s.selectedZ);
-        drawTileDiamond(ghost, sx, sy, hexToInt(s.selectedColor), 0.5, 0xffffff);
-        ghost.rotation = 0;
-      }
-
-      function hexToInt(hex: string) {
-        return parseInt(hex.replace("#", ""), 16);
+        drawTileDiamond(ghostFootprint, sx, sy, hexToInt(s.selectedColor), 0.25, 0xffffff);
+        ghostArt.x = sx;
+        ghostArt.y = sy;
+        ghostArt.addChild(buildPieceArt(s.selectedType, s.selectedRotation, s.selectedColor, s.selectedZ, 0.6));
       }
 
       function redrawPieces() {
         piecesLayer.removeChildren();
         const s = useParkStore.getState();
-        for (const piece of s.pieces.values()) {
+        const ordered = [...s.pieces.values()].sort(
+          (a, b) => a.x + a.y - (b.x + b.y) || a.z - b.z,
+        );
+        for (const piece of ordered) {
           piecesLayer.addChild(renderPiece(piece));
         }
       }
@@ -113,33 +106,14 @@ export default function PixiCanvas() {
         const { sx, sy } = gridToScreen(piece.x, piece.y, piece.z);
         c.x = sx;
         c.y = sy;
-        const g = new Graphics();
-        drawTileDiamond(g, 0, 0, hexToInt(piece.color));
-        c.addChild(g);
-
-        const label = new Text({
-          text: PIECE_ICON[piece.type] ?? "?",
-          style: { fill: 0xffffff, fontSize: 16, fontWeight: "bold" },
-        });
-        label.anchor.set(0.5);
-        label.y = -2;
-        c.addChild(label);
-
-        if (piece.type.startsWith("track")) {
-          const dir = new Graphics();
-          const angle = (piece.rotation * Math.PI) / 2;
-          const dx = Math.cos(angle) * 16;
-          const dy = Math.sin(angle) * 8;
-          dir.moveTo(0, 6).lineTo(dx, 6 + dy).stroke({ color: 0xffffff, width: 2, alpha: 0.8 });
-          c.addChild(dir);
-        }
+        c.addChild(buildPieceArt(piece.type, piece.rotation, piece.color, piece.z));
 
         const ownerTag = new Text({
           text: piece.ownerName,
           style: { fill: 0xcbd5e1, fontSize: 9 },
         });
         ownerTag.anchor.set(0.5, 0);
-        ownerTag.y = 10;
+        ownerTag.y = 12;
         c.addChild(ownerTag);
 
         return c;
